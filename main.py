@@ -1,10 +1,11 @@
+Import os
 from flask import Flask, render_template_string, request
 from googleapiclient.discovery import build
 
 app = Flask(__name__)
 
-# YouTube API Key
-YOUTUBE_API_KEY = "AIzaSyD8NUXsEscZUt7TMDdfeHm1TqqQ_U0D2j0"
+# YouTube API Key එක ආරක්ෂිතව Environment Variable එකෙන් ලබා ගැනීම
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 html_template = """
 <!DOCTYPE html>
@@ -53,6 +54,10 @@ def index():
     videos = []
     if query:
         try:
+            # API Key එක හරියට තියෙනවාද කියා පරීක්ෂා කිරීම
+            if not YOUTUBE_API_KEY:
+                return "Error: YouTube API Key is not set in Koyeb settings!"
+            
             youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
             req = youtube.search().list(q=query, part='snippet', type='video', maxResults=12)
             res = req.execute()
@@ -62,4 +67,5 @@ def index():
     return render_template_string(html_template, videos=videos)
 
 if __name__ == '__main__':
+    # Koyeb වැනි සේවාවන් සඳහා port එක 8080 ලෙස තැබීම සුදුසුයි
     app.run(host='0.0.0.0', port=8080)
