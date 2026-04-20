@@ -1,10 +1,9 @@
-Import os
+import os
 from flask import Flask, render_template_string, request
 from googleapiclient.discovery import build
 
 app = Flask(__name__)
 
-# YouTube API Key එක ආරක්ෂිතව Environment Variable එකෙන් ලබා ගැනීම
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 html_template = """
@@ -24,6 +23,7 @@ html_template = """
         .video-card { background: #1e1e1e; padding: 15px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         iframe { width: 100%; height: 200px; border-radius: 10px; border: none; }
         h3 { font-size: 14px; margin-top: 15px; color: #f1f1f1; }
+        .message { padding: 20px; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -36,6 +36,7 @@ html_template = """
             <button type="submit">Search (සොයන්න)</button>
         </form>
     </div>
+    {{ message|safe }}
     <div class="video-grid">
         {% for video in videos %}
         <div class="video-card">
@@ -52,9 +53,9 @@ html_template = """
 def index():
     query = request.args.get('q')
     videos = []
+    message = ""
     if query:
         try:
-            # API Key එක හරියට තියෙනවාද කියා පරීක්ෂා කිරීම
             if not YOUTUBE_API_KEY:
                 return "Error: YouTube API Key is not set in Koyeb settings!"
             
@@ -62,10 +63,19 @@ def index():
             req = youtube.search().list(q=query, part='snippet', type='video', maxResults=12)
             res = req.execute()
             videos = res.get('items', [])
+            
+            if not videos:
+                message = '<div class="message"><h2>Result නෑ මචෝ 😢</h2></div>'
+                
         except Exception as e:
             print(f"Error: {e}")
-    return render_template_string(html_template, videos=videos)
+            return f"API Error: {e}"
+    return render_template_string(html_template, videos=videos, message=message)
 
 if __name__ == '__main__':
-    # Koyeb වැනි සේවාවන් සඳහා port එක 8080 ලෙස තැබීම සුදුසුයි
     app.run(host='0.0.0.0', port=8080)
+flask
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+gunicorn
