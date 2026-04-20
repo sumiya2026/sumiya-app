@@ -74,8 +74,3 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
-flask
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
-gunicorn
